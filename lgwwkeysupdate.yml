@@ -1,0 +1,103 @@
+---
+- name: Configure SSH keys and lsyncd
+  hosts: host1
+  become: true
+  tasks:
+    - name: Remove existing files
+      command:
+        rm -f "{{ item }}"
+      with_items:
+        - /etc/lsyncd/www-upload.key
+        - /home/lg_admin/.ssh/id_rsa
+        - /home/lg_admin/.ssh/id_rsa.pub
+        - /home/www-upload/.ssh/id_rsa
+        - /home/www-upload/.ssh/id_rsa.pub
+
+    - name: Create SSH directories
+      file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - /home/lg_admin/.ssh
+        - /home/www-upload/.ssh
+
+    - name: Generate SSH keys for lg_admin
+      command: ssh-keygen -P '' -f /home/lg_admin/.ssh/id_rsa
+      become_user: lg_admin
+
+    - name: Generate SSH keys for www-upload
+      command: ssh-keygen -P '' -f /home/www-upload/.ssh/id_rsa
+      become_user: www-upload
+
+    - name: Add lg_admin public key to authorized_keys
+      command: ssh-keygen -y -f /home/lg_admin/.ssh/id_rsa | tee /home/lg_admin/.ssh/authorized_keys
+      become_user: lg_admin
+
+    - name: Add www-upload public key to authorized_keys
+      command: ssh-keygen -y -f /home/www-upload/.ssh/id_rsa | tee /home/www-upload/.ssh/authorized_keys
+      become_user: www-upload
+
+    - name: Change ownership of directories
+      file:
+        path: "{{ item.path }}"
+        owner: "{{ item.owner }}"
+        group: "{{ item.group }}"
+        recurse: yes
+      with_items:
+        - { path: /home/lg_admin, owner: lg_admin, group: lg_admin }
+        - { path: /home/www-upload, owner: www-upload, group: www-data }
+
+    - name: Copy id_rsa to /etc/lsyncd/www-upload.key
+      copy:
+        src: /home/www-upload/.ssh/id_rsa
+        dest: /etc/lsyncd/www-upload.key
+        owner: root
+        group: root
+        mode: '0600'
+
+    - name: Print lg_admin public key
+      command: ssh-keygen -y -f /home/lg_admin/.ssh/id_rsa
+      register: lg_admin_public_key
+      become_user: lg_admin
+
+    - name: Print www-upload public key
+      command: ssh-keygen -y -f /home/www-upload/.ssh/id_rsa
+      register: www-upload_public_key
+      become_user: www-upload
+
+- name: Configure SSH keys in host2
+  hosts: host2
+  become: true
+  tasks:
+    - name: Create SSH directories for www-upload
+      file:
+        path: "/home/www-upload/.ssh"
+        state: directory
+
+    - name: Add lg_admin public key to lg_admin authorized_keys
+      lineinfile:
+        path: "/home/lg_admin/.ssh/authorized_keys"
+        line: "{{ lg_admin_public_key.stdout }}"
+      become_user: lg_admin
+      when: lg_admin_public_key is defined
+
+    - name: Add www-upload public key to www-upload authorized_keys
+      lineinfile:
+        path: "/home/www-upload/.ssh/authorized_keys"
+        line: "{{ www-upload_public_key.stdout }}"
+      become_user: www-upload
+      when: www_upload_public_key is defined
+
+- name: Copy lg_admin id_rsa from host1 to host2
+  hosts: host2
+  tasks:
+    - name: Copy id_rsa file
+      copy:
+        src: "/home/lg_admin/.ssh/id_rsa"
+        dest: "/home/lg_admin/.ssh/id_rsa"
+        mode: 0600
+      delegate_to: host1
+      become: yes
+      become_user: lg_admin
+
+

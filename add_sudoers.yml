@@ -1,0 +1,23 @@
+---
+- name: Create sudoers file
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Create sudoers directory
+      file:
+        path: /etc/sudoers.d
+        state: directory
+
+    - name: Create sudoers file
+      template:
+        src: 01-sudo.j2
+        dest: /etc/sudoers.d/01-sudo
+        owner: root
+        group: root
+        mode: '0440'
+      notify: Restart sudo
+
+  handlers:
+    - name: Restart sudo
+      command: sudo service sudo restart

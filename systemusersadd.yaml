@@ -1,0 +1,58 @@
+---
+- name: User and SSH configuration
+  hosts: all
+  become: true
+  tasks:
+    - name: Create lg_admin user
+      user:
+        name: lg_admin
+        shell: /bin/bash
+        home: /home/lg_admin/
+        createhome: yes
+
+    - name: Add lg_admin to groups
+      user:
+        name: lg_admin
+        groups: adm,sudo,www-data
+        append: yes
+
+    - name: Create .ssh directory for lg_admin
+      file:
+        path: /home/lg_admin/.ssh/
+        state: directory
+        owner: lg_admin
+        group: lg_admin
+        mode: '0700'
+
+    - name: Set permissions for lg_admin .ssh directory
+      file:
+        path: /home/lg_admin/.ssh/
+        state: directory
+        mode: '0700'
+
+    - name: Create www-upload user
+      user:
+        name: www-upload
+        shell: /bin/bash
+        home: /home/www-upload/
+        createhome: yes
+
+    - name: Add www-upload to groups
+      user:
+        name: www-upload
+        groups: adm,www-data
+        append: yes
+
+    - name: Create .ssh directory for www-upload
+      file:
+        path: /home/www-upload/.ssh/
+        state: directory
+        owner: www-upload
+        group: www-upload
+        mode: '0700'
+
+    - name: Set permissions for www-upload .ssh directory
+      file:
+        path: /home/www-upload/.ssh/
+        state: directory
+        mode: '0700'
