@@ -5,10 +5,10 @@
   tasks:
     - name: Retrieve user list from implusb2c-dev1-nfs
       shell: ls -l /home | tail -n +2 | awk '{print $3}'
-      register: users
+      register: h1users
       changed_when: false
     - set_fact:
-        variable1: "{{ users.stdout_lines }}"
+        variable1: "{{ h1users.stdout_lines }}"
     - debug:
         var: variable1
 - name: Fetch user list from implusb2c-dev2-nfs
@@ -17,9 +17,9 @@
   tasks:
     - name: Retrieve user list from implusb2c-dev2-nfs
       shell: ls -l /home | tail -n +2 | awk '{print $3}'
-      register: users
+      register: h2users
       changed_when: false
     - set_fact:
-        variable2: "{{ users.stdout_lines }}"
+        variable2: "{{ h2users.stdout_lines }}"
     - debug:
-        var: variable1
+        var: variable2
