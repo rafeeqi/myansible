@@ -1,22 +1,31 @@
 ---
-- name: get user list
-  hosts: implusb2c-dev2-nfs
+- name: Fetch user list from implusb2c-dev1-nfs
+  hosts: implusb2c-dev1-nfs
+  gather_facts: false
   tasks:
     - name: Retrieve user list from implusb2c-dev1-nfs
-      shell: ls -l /home | tail -n +2 | awk '{print $3}'
-      register: users
-      delegate_to: implusb2c-dev1-nfs
-        - set_fact:
-            fetched_users: "{{ users.stdout_lines }}"
-    - name: Print fetched_users variable
-      debug:
-        var: fetched_users
-    - name: Fetch existing user list from implusb2c-dev2-nfs
       command: ls -l /home | tail -n +2 | awk '{print $3}'
-      register: existing_users
-      delegate_to: implusb2c-dev2-nfs
+      register: users
+      changed_when: false
     - set_fact:
-        ansible_users: "{{ existing_users.stdout_lines }}"
-    - name: Print ansible_users variable
+        variable1: "{{ users.stdout_lines }}"
+- name: Fetch user list from implusb2c-dev2-nfs
+  hosts: implusb2c-dev2-nfs
+  gather_facts: false
+  tasks:
+    - name: Retrieve user list from implusb2c-dev2-nfs
+      command: ls -l /home | tail -n +2 | awk '{print $3}'
+      register: users
+      changed_when: false
+    - set_fact:
+        variable2: "{{ users.stdout_lines }}"
+- name: Print variable1 and variable2
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Print variable1
       debug:
-        var: ansible_users
+        var: variable1
+    - name: Print variable2
+      debug:
+        var: variable2
