@@ -4,7 +4,7 @@
   gather_facts: false
   tasks:
     - name: Retrieve user list from implusb2c-dev1-nfs
-      command: ls -l /home | tail -n +2 | awk '{print $3}'
+      shell: ls -l /home | tail -n +2 | awk '{print $3}'
       register: users
       changed_when: false
     - set_fact:
@@ -14,7 +14,7 @@
   gather_facts: false
   tasks:
     - name: Retrieve user list from implusb2c-dev2-nfs
-      command: ls -l /home | tail -n +2 | awk '{print $3}'
+      shell: ls -l /home | tail -n +2 | awk '{print $3}'
       register: users
       changed_when: false
     - set_fact:
