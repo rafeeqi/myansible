@@ -14,6 +14,7 @@
     - name: Fetch existing user list from implusb2c-dev2-nfs
       command: ls -l /home | tail -n +2 | awk '{print $3}'
       register: existing_users
+      delegate_to: implusb2c-dev2-nfs
     - set_fact:
         ansible_users: "{{ existing_users.stdout_lines }}"
     - name: Print ansible_users variable
