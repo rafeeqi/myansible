@@ -1,0 +1,47 @@
+- name: Create SSH users on host2 and copy authorized keys
+  hosts: host2
+  tasks:
+    - name: Get list of users from host1
+      command: "ls -1 /home"
+      register: host1_users
+      delegate_to: host1
+      changed_when: false
+      become: true
+
+    - name: Create SSH users on host2 if they don't exist
+      user:
+        name: "{{ item }}"
+        shell: /bin/bash
+        group: www-data
+        createhome: yes
+        home: "/home/{{ item }}"
+      with_items: "{{ host1_users.stdout_lines }}"
+      when: item not in ansible_users
+
+    - name: Copy authorized_keys file from host1 to host2 for each user
+      copy:
+        src: "/home/{{ item }}/.ssh/authorized_keys"
+        dest: "/home/{{ item }}/.ssh/authorized_keys"
+        mode: 0600
+      with_items: "{{ host1_users.stdout_lines }}"
+      delegate_to: host1
+      become: yes
+
+    - name: Set ownership and permissions on SSH directories and files
+      file:
+        path: "/home/{{ item }}/.ssh"
+        state: directory
+        owner: "{{ item }}"
+        group: www-data
+        mode: 0700
+      with_items: "{{ host1_users.stdout_lines }}"
+      become: yes
+
+    - file:
+        path: "/home/{{ item }}/.ssh/authorized_keys"
+        state: file
+        owner: "{{ item }}"
+        group: www-data
+        mode: 0600
+      with_items: "{{ host1_users.stdout_lines }}"
+      become: yes
