@@ -9,6 +9,8 @@
       changed_when: false
     - set_fact:
         variable1: "{{ users.stdout_lines }}"
+        debug:
+          var: variable1
 - name: Fetch user list from implusb2c-dev2-nfs
   hosts: implusb2c-dev2-nfs
   gather_facts: false
@@ -19,13 +21,5 @@
       changed_when: false
     - set_fact:
         variable2: "{{ users.stdout_lines }}"
-- name: Print variable1 and variable2
-  hosts: localhost
-  gather_facts: false
-  tasks:
-    - name: Print variable1
-      debug:
-        var: variable1
-    - name: Print variable2
-      debug:
-        var: variable2
+        debug:
+          var: variable1
